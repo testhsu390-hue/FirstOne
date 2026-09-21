@@ -40,6 +40,12 @@ html, body {
   width: 100vw; height: 100vh;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
+  /* Scale the VIEWPORT (not .deck) so .deck keeps native coordinate space
+     for accurate click hit-testing on mobile Chrome.
+     Mobile Chrome bug: transform: scale() on element with children
+     causes hit-area misalignment (touch coords map to unscaled space). */
+  transform-origin: center center;
+  will-change: transform;
 }
 
 .deck {
@@ -47,8 +53,8 @@ html, body {
   position: relative; overflow: hidden;
   background: linear-gradient(135deg, var(--bg-deep) 0%, #0f2845 50%, #162d52 100%);
   border-radius: 0;
-  transform-origin: center center;
-  will-change: transform;
+  /* NO transform here — scale is applied to .deck-viewport parent instead,
+     to preserve click hit-testing accuracy on mobile Chrome. */
 }
 
 /* JS 會在 onload/resize 時計算 .deck 的 transform: scale(),
@@ -285,6 +291,8 @@ html, body {
   border-radius: var(--radius);
   overflow: hidden;
   cursor: pointer;
+  touch-action: manipulation; /* Prevent double-tap zoom delay, allow single-tap click */
+  -webkit-tap-highlight-color: transparent; /* Remove tap flash on iOS/Chrome */
   transition: transform 0.2s, box-shadow 0.2s;
   position: relative;
 }
@@ -521,16 +529,16 @@ html, body {
 /* Responsive — fit-to-viewport by JS; media queries are CSS-only fallback
    for environments without JS (like some preview tools). */
 @media (max-width: 1400px) and (prefers-reduced-motion: no-preference) {
-  .deck:not([data-scaled]) { transform: scale(0.75); }
+  .deck-viewport:not([data-scaled]) { transform: scale(0.75); }
 }
 @media (max-width: 1200px) and (prefers-reduced-motion: no-preference) {
-  .deck:not([data-scaled]) { transform: scale(0.6); }
+  .deck-viewport:not([data-scaled]) { transform: scale(0.6); }
 }
 @media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
-  .deck:not([data-scaled]) { transform: scale(0.45); }
+  .deck-viewport:not([data-scaled]) { transform: scale(0.45); }
 }
 @media (max-width: 600px) and (prefers-reduced-motion: no-preference) {
-  .deck:not([data-scaled]) { transform: scale(0.3); }
+  .deck-viewport:not([data-scaled]) { transform: scale(0.3); }
 }
 </style>
 </head>
@@ -1285,13 +1293,15 @@ document.addEventListener('touchend', (e) => {
 // JS computes scale = min(vw/1920, vh/1080) so the deck fits exactly.
 function fitDeck() {
   const deck = document.getElementById('deck');
-  if (!deck) return;
+  const viewport = document.querySelector('.deck-viewport');
+  if (!deck || !viewport) return;
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const DECK_W = 1920, DECK_H = 1080;
   const scale = Math.min(vw / DECK_W, vh / DECK_H);
-  deck.style.transform = `scale(${scale})`;
-  deck.setAttribute('data-scaled', '1');
+  // Scale the VIEWPORT wrapper, NOT .deck — preserves click hit-testing
+  viewport.style.transform = `scale(${scale})`;
+  viewport.setAttribute('data-scaled', '1');
   // Hide scrollbars — deck should fit exactly without scrolling
   document.body.style.overflow = 'hidden';
 }
