@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>溫哥華一日遊 — 互動演示</title>
+<style>
+:root {
+  --bg-deep: #0a1628;
+  --bg-panel: #112240;
+  --bg-card: #1a3a5c;
+  --ink: #e8edf2;
+  --ink-muted: #8da4b8;
+  --accent: #e8a838;
+  --accent-glow: rgba(232,168,56,0.3);
+  --ocean: #1a6ba8;
+  --land: #2a5a3a;
+  --route: #4a9eff;
+  --danger: #e8583a;
+  --success: #38c878;
+  --slide-w: 1920px;
+  --slide-h: 1080px;
+  --radius: 16px;
+  --font: 'Segoe UI', 'Noto Sans TC', -apple-system, sans-serif;
+  --mono: 'Cascadia Code', 'Fira Code', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg-deep);
+  font-family: var(--font);
+  color: var(--ink);
+}
+
+/* Deck container */
+.deck-viewport {
+  width: 100vw; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+
+.deck {
+  width: var(--slide-w); height: var(--slide-h);
+  position: relative; overflow: hidden;
+  background: linear-gradient(135deg, var(--bg-deep) 0%, #0f2845 50%, #162d52 100%);
+  border-radius: 0;
+  transform-origin: center center;
+}
+
+/* Slides */
+.slide {
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  padding: 72px 96px;
+  opacity: 0; visibility: hidden;
+  transition: opacity 0.5s ease, visibility 0s linear 0.5s;
+}
+.slide.active {
+  opacity: 1; visibility: visible;
+  transition: opacity 0.5s ease, visibility 0s linear 0s;
+}
+
+/* Navigation */
+.deck-nav {
+  position: absolute; bottom: 24px; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 48px; z-index: 100;
+  pointer-events: none;
+}
+.deck-nav > * { pointer-events: auto; }
+
+.nav-arrows { display: flex; gap: 12px; }
+.nav-arrow {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12);
+  color: var(--ink); font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+  backdrop-filter: blur(8px);
+}
+.nav-arrow:hover { background: rgba(255,255,255,0.16); }
+.nav-arrow:disabled { opacity: 0.3; cursor: default; }
+
+.slide-counter {
+  font-family: var(--mono); font-size: 14px;
+  color: var(--ink-muted); letter-spacing: 2px;
+  background: rgba(0,0,0,0.3); padding: 8px 20px; border-radius: 20px;
+  backdrop-filter: blur(8px);
+}
+
+.progress-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 3px; background: rgba(255,255,255,0.06);
+  z-index: 100;
+}
+.progress-fill {
+  height: 100%; background: var(--accent);
+  transition: width 0.4s ease;
+}
+
+/* Typography */
+.slide-title {
+  font-size: 52px; font-weight: 800;
+  line-height: 1.1; margin-bottom: 12px;
+  letter-spacing: -1px;
+}
+.slide-subtitle {
+  font-size: 22px; color: var(--ink-muted);
+  font-weight: 400; margin-bottom: 36px;
+  line-height: 1.4;
+}
+.section-label {
+  font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 3px;
+  color: var(--accent); margin-bottom: 8px;
+}
+
+/* Cards */
+.card-grid {
+  display: grid; gap: 20px;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+/* Slide 1: Hero */
+.hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(26,107,168,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(232,168,56,0.08) 0%, transparent 50%),
+    linear-gradient(135deg, var(--bg-deep) 0%, #0f2845 100%);
+}
+.hero-content { position: relative; z-index: 1; }
+.hero-title {
+  font-size: 88px; font-weight: 900;
+  line-height: 1.05; margin-bottom: 20px;
+  letter-spacing: -2px;
+}
+.hero-title .accent { color: var(--accent); }
+.hero-desc {
+  font-size: 26px; color: var(--ink-muted);
+  max-width: 900px; line-height: 1.5;
+  margin-bottom: 48px;
+}
+.hero-badges {
+  display: flex; gap: 16px; flex-wrap: wrap;
+}
+.badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  padding: 10px 20px; border-radius: 100px;
+  font-size: 16px; font-weight: 500;
+  backdrop-filter: blur(8px);
+}
+.badge-icon { font-size: 18px; }
+
+/* Slide 2: Route Map */
+.route-map-container {
+  width: 100%; height: 100%;
+  display: grid; grid-template-columns: 1fr 380px;
+  gap: 32px;
+}
+.map-panel {
+  background: var(--bg-panel);
+  border-radius: var(--radius);
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow: hidden; position: relative;
+  display: flex; flex-direction: column;
+}
+.map-panel-header {
+  padding: 16px 24px;
+  font-size: 14px; font-weight: 600;
+  color: var(--ink-muted); letter-spacing: 1px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.map-svg-container { flex: 1; position: relative; }
+.map-svg-container svg { width: 100%; height: 100%; }
+
+/* Route info panel */
+.route-info {
+  background: var(--bg-panel);
+  border-radius: var(--radius);
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 24px; display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.route-info-title {
+  font-size: 20px; font-weight: 700; margin-bottom: 16px;
+}
+.route-stop {
+  display: flex; gap: 14px; padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; transition: background 0.15s;
+  border-radius: 8px; padding-left: 8px; padding-right: 8px;
+}
+.route-stop:hover { background: rgba(255,255,255,0.04); }
+.route-stop.active { background: rgba(232,168,56,0.1); }
+.route-stop-num {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--accent); color: var(--bg-deep);
+  font-weight: 800; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.route-stop-num.inactive {
+  background: rgba(255,255,255,0.12); color: var(--ink-muted);
+}
+.route-stop-info { flex: 1; }
+.route-stop-name { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+.route-stop-time { font-size: 13px; color: var(--ink-muted); }
+.route-stop-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+.route-tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 4px;
+  background: rgba(255,255,255,0.06); color: var(--ink-muted);
+}
+
+/* SVG interactive stops */
+.stop-circle { cursor: pointer; transition: transform 0.2s; }
+.stop-circle:hover { transform: scale(1.15); }
+.stop-label {
+  font-size: 12px; font-weight: 600; fill: var(--ink);
+  pointer-events: none;
+}
+
+/* Slide 3: Itinerary timeline */
+.timeline {
+  position: relative; padding-left: 48px;
+  max-height: 780px; overflow-y: auto;
+}
+.timeline::before {
+  content: ''; position: absolute; left: 23px; top: 0; bottom: 0;
+  width: 2px; background: linear-gradient(to bottom, var(--accent), var(--route), transparent);
+}
+.timeline-item {
+  position: relative; padding: 0 0 28px 0;
+}
+.timeline-dot {
+  position: absolute; left: -48px; top: 4px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent); border: 3px solid var(--bg-deep);
+  z-index: 1;
+}
+.timeline-time {
+  font-family: var(--mono); font-size: 14px;
+  color: var(--accent); font-weight: 600;
+  margin-bottom: 4px;
+}
+.timeline-title {
+  font-size: 20px; font-weight: 700; margin-bottom: 6px;
+}
+.timeline-desc {
+  font-size: 15px; color: var(--ink-muted); line-height: 1.5;
+}
+.timeline-cost {
+  font-family: var(--mono); font-size: 13px;
+  color: var(--success); margin-top: 4px;
+}
+
+/* Slide 4: Attraction details grid */
+.attraction-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.attraction-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+.attraction-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+.attraction-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+.attraction-header {
+  height: 8px;
+  background: var(--accent);
+}
+.attraction-body { padding: 20px; }
+.attraction-icon {
+  font-size: 36px; margin-bottom: 10px;
+  display: block;
+}
+.attraction-name {
+  font-size: 18px; font-weight: 700; margin-bottom: 4px;
+}
+.attraction-category {
+  font-size: 12px; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin-bottom: 10px;
+}
+.attraction-desc {
+  font-size: 14px; color: var(--ink-muted);
+  line-height: 1.5;
+}
+.attraction-meta {
+  display: flex; gap: 12px; margin-top: 12px;
+  padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06);
+}
+.attraction-meta-item {
+  font-size: 12px; color: var(--ink-muted);
+}
+.attraction-meta-value {
+  color: var(--ink); font-weight: 600;
+}
+
+/* Detail modal */
+.detail-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  display: none; align-items: center; justify-content: center;
+}
+.detail-overlay.visible { display: flex; }
+.detail-modal {
+  background: var(--bg-panel);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: var(--radius);
+  width: 720px; max-height: 80%;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.detail-header {
+  padding: 24px 32px;
+  background: var(--bg-card);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.detail-close {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: none;
+  color: var(--ink); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.detail-body {
+  padding: 28px 32px; overflow-y: auto;
+}
+.detail-section { margin-bottom: 24px; }
+.detail-section-title {
+  font-size: 14px; font-weight: 700; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin-bottom: 8px;
+}
+.detail-section-content {
+  font-size: 16px; line-height: 1.6;
+}
+
+/* Slide 5: Tips */
+.tip-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+.tip-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  padding: 28px;
+}
+.tip-icon {
+  font-size: 32px; margin-bottom: 12px;
+}
+.tip-title {
+  font-size: 18px; font-weight: 700; margin-bottom: 8px;
+}
+.tip-desc {
+  font-size: 15px; color: var(--ink-muted);
+  line-height: 1.5;
+}
+
+/* Slide 6: Budget */
+.budget-table {
+  width: 100%; border-collapse: collapse;
+}
+.budget-table th {
+  text-align: left; padding: 14px 20px;
+  font-size: 13px; font-weight: 700;
+  color: var(--ink-muted); text-transform: uppercase;
+  letter-spacing: 1.5px; border-bottom: 2px solid rgba(255,255,255,0.08);
+}
+.budget-table td {
+  padding: 14px 20px; font-size: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.budget-table tr:last-child td { border-bottom: none; }
+.budget-table .price {
+  font-family: var(--mono); color: var(--success); font-weight: 600;
+}
+.budget-total td {
+  font-size: 18px; font-weight: 700;
+  padding-top: 18px; border-top: 2px solid rgba(255,255,255,0.1);
+}
+
+/* Slide 7: Summary */
+.summary-content {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 40px; align-items: start;
+}
+.summary-stat {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 28px;
+}
+.summary-stat-label {
+  font-size: 14px; color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+.summary-stat-value {
+  font-size: 40px; font-weight: 800;
+  color: var(--accent);
+}
+.summary-checklist {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 28px;
+}
+.checklist-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.checklist-item:last-child { border-bottom: none; }
+.checklist-check {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(56,200,120,0.15);
+  color: var(--success); font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.checklist-text { font-size: 15px; }
+
+/* Slide 8: Ending */
+.ending-content {
+  text-align: center;
+  padding-top: 120px;
+}
+.ending-icon {
+  font-size: 96px; margin-bottom: 32px;
+}
+.ending-title {
+  font-size: 64px; font-weight: 800;
+  margin-bottom: 20px;
+}
+.ending-subtitle {
+  font-size: 24px; color: var(--ink-muted);
+  margin-bottom: 48px;
+}
+.ending-cta {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: var(--accent); color: var(--bg-deep);
+  font-size: 20px; font-weight: 700;
+  padding: 16px 40px; border-radius: 100px;
+  border: none; cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.ending-cta:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 32px var(--accent-glow);
+}
+
+/* Keyboard hint */
+.kbd-hint {
+  position: absolute; bottom: 80px; right: 48px;
+  font-size: 12px; color: rgba(255,255,255,0.2);
+  font-family: var(--mono);
+}
+.kbd {
+  background: rgba(255,255,255,0.08);
+  padding: 2px 8px; border-radius: 4px;
+  font-family: var(--mono);
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes drawRoute {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.slide.active .animate-fade-up {
+  animation: fadeUp 0.6s ease both;
+}
+.slide.active .animate-fade-in {
+  animation: fadeIn 0.8s ease both;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+  .deck { transform: scale(0.75); }
+}
+@media (max-width: 1200px) {
+  .deck { transform: scale(0.6); }
+}
+@media (max-width: 900px) {
+  .deck { transform: scale(0.45); }
+}
+@media (max-width: 600px) {
+  .deck { transform: scale(0.3); }
+}
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+  <div class="deck" id="deck">
+
+    <!-- SLIDE 1: Hero -->
+    <div class="slide active" id="slide-1">
+      <div class="hero-bg"></div>
+      <div class="hero-content">
+        <div class="section-label animate-fade-up">BC · Canada · One Day</div>
+        <h1 class="hero-title animate-fade-up" style="animation-delay: 0.1s">
+          溫哥華<span class="accent">一日遊</span>
+        </h1>
+        <p class="hero-desc animate-fade-up" style="animation-delay: 0.2s">
+          從斯坦利公園到格蘭維爾島，從煤氣鎮到日落海灘 ——<br>
+          一份精心規劃的 24 小時溫哥華精華路線。
+        </p>
+        <div class="hero-badges animate-fade-up" style="animation-delay: 0.3s">
+          <div class="badge"><span class="badge-icon">🗺️</span> 6 大景點</div>
+          <div class="badge"><span class="badge-icon">🚶</span> 路線優化</div>
+          <div class="badge"><span class="badge-icon">💰</span> 預算 $95–130</div>
+          <div class="badge"><span class="badge-icon">⏰</span> 8:00 AM – 8:00 PM</div>
+        </div>
+      </div>
+      <div class="kbd-hint"><span class="kbd">←</span> <span class="kbd">→</span> 翻頁 · <span class="kbd">Home</span> 回開頭</div>
+    </div>
+
+    <!-- SLIDE 2: Route Map -->
+    <div class="slide" id="slide-2">
+      <div class="slide-title" style="margin-bottom: 8px;">路線總覽</div>
+      <div class="slide-subtitle">點擊停站編號查看詳情，或直接翻頁展開完整行程</div>
+      <div class="route-map-container">
+        <div class="map-panel">
+          <div class="map-panel-header">
+            <span>溫哥華一日遊路線圖</span>
+            <span id="map-tooltip" style="color: var(--accent); font-size: 13px;"></span>
+          </div>
+          <div class="map-svg-container">
+            <svg viewBox="0 0 800 560" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="oceanGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#0f2845"/>
+                  <stop offset="100%" stop-color="#0a1628"/>
+                </linearGradient>
+                <linearGradient id="landGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#2a5a3a"/>
+                  <stop offset="100%" stop-color="#1a3a2a"/>
+                </linearGradient>
+                <filter id="glow">
+                  <feGaussianBlur stdDeviation="3" result="blur"/>
+                  <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                </filter>
+              </defs>
+
+              <!-- Ocean background -->
+              <rect width="800" height="560" fill="url(#oceanGrad)"/>
+
+              <!-- Landmass (Vancouver peninsula simplified) -->
+              <path d="M 200 80 Q 280 60 380 70 L 460 60 Q 520 80 540 140 L 560 200 Q 580 260 560 320 L 540 380 Q 520 440 460 460 L 380 470 Q 300 460 240 440 L 180 400 Q 140 360 130 300 L 120 240 Q 120 180 140 140 Z"
+                    fill="url(#landGrad)" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+
+              <!-- Stanley Park (west side) -->
+              <ellipse cx="175" cy="240" rx="60" ry="85" fill="#1a4a2a" stroke="rgba(56,200,120,0.2)" stroke-width="1.5"/>
+              <text x="175" y="240" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-weight="600">Stanley Park</text>
+
+              <!-- Downtown area -->
+              <rect x="280" y="170" width="140" height="120" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.06)" stroke-width="1" rx="4"/>
+              <text x="350" y="235" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="10" font-weight="600">Downtown</text>
+
+              <!-- Granville Island -->
+              <ellipse cx="360" cy="310" rx="35" ry="20" fill="rgba(232,168,56,0.12)" stroke="rgba(232,168,56,0.25)" stroke-width="1.5"/>
+              <text x="360" y="314" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="8">Granville</text>
+
+              <!-- Gastown -->
+              <rect x="290" y="250" width="40" height="35" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" stroke-width="1" rx="3"/>
+              <text x="310" y="272" text-anchor="middle" fill="rgba(255,255,255,0.35)" font-size="8">Gastown</text>
+
+              <!-- North Vancouver (across water) -->
+              <rect x="250" y="40" width="200" height="55" fill="url(#landGrad)" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" rx="6"/>
+              <text x="350" y="72" text-anchor="middle" fill="rgba(255,255,255,0.3)" font-size="9">North Vancouver</text>
+
+              <!-- Water bodies -->
+              <ellipse cx="560" cy="280" rx="80" ry="60" fill="rgba(26,107,168,0.08)"/>
+              <ellipse cx="680" cy="400" rx="70" ry="50" fill="rgba(26,107,168,0.06)"/>
+
+              <!-- Route line (animated) -->
+              <path d="M 175 215 Q 220 200 290 230 L 320 260 Q 330 280 360 300 Q 400 310 420 300 L 440 260 Q 450 230 430 210 Q 400 200 380 180 L 350 150 Q 320 130 310 110"
+                    fill="none" stroke="var(--route)" stroke-width="3" stroke-linecap="round" stroke-dasharray="8,6"
+                    class="route-line" style="stroke-dashoffset: 2000; animation: drawRoute 3s ease forwards;"/>
+
+              <!-- Route stops -->
+              <g class="stop-group">
+                <!-- Stop 1: Stanley Park -->
+                <g class="stop-circle" data-stop="1" transform="translate(175,215)">
+                  <circle r="18" fill="rgba(232,168,56,0.2)" class="stop-pulse"/>
+                  <circle r="12" fill="var(--accent)"/>
+                  <text y="4" text-anchor="middle" font-size="12" font-weight="800" fill="var(--bg-deep)">1</text>
+                  <text class="stop-label" x="0" y="-28" text-anchor="middle">Stanley Park</text>
+                </g>
+                <!-- Stop 2: Seawall -->
+                <g class="stop-circle" data-stop="2" transform="translate(250,180)">
+                  <circle r="12" fill="var(--accent)"/>
+                  <text y="4" text-anchor="middle" font-size="10" font-weight="800" fill="var(--bg-deep)">2</text>
+                  <text class="stop-label" x="0" y="-22" text-anchor="middle">Seawall</text>
+                </g>
+                <!-- Stop 3: Gastown -->
+                <g class="stop-circle" data-stop="3" transform="translate(310,272)">
+                  <circle r="12" fill="var(--accent)"/>
+                  <text y="4" text-anchor="middle" font-size="10" font-weight="800" fill="var(--bg-deep)">3</text>
+                  <text class="stop-label" x="50" y="0" text-anchor="start">Gastown</text>
+                </g>
+                <!-- Stop 4: Granville Island -->
+                <g class="stop-circle" data-stop="4" transform="translate(360,310)">
+                  <circle r="12" fill="var(--accent)"/>
+                  <text y="4" text-anchor="middle" font-size="10" font-weight="800" fill="var(--bg-deep)">4</text>
+                  <text class="stop-label" x="45" y="5" text-anchor="start">Granville Island</text>
+                </g>
+                <!-- Stop 5: English Bay -->
+                <g class="stop-circle" data-stop="5" transform="translate(200,330)">
+                  <circle r="12" fill="var(--accent)"/>
+                  <text y="4" text-anchor="middle" font-size="10" font-weight="800" fill="var(--bg-deep)">5</text>
+                  <text class="stop-label" x="-45" y="0" text-anchor="end">English Bay</text>
+                </g>
+                <!-- Stop 6: VanDusen -->
+                <g class="stop-circle" data-stop="6" transform="translate(500,220)">
+                  <circle r="12" fill="var(--accent)"/>
+                  <text y="4" text-anchor="middle" font-size="10" font-weight="800" fill="var(--bg-deep)">6</text>
+                  <text class="stop-label" x="45" y="0" text-anchor="start">VanDusen</text>
+                </g>
+              </g>
+
+              <!-- Compass -->
+              <g transform="translate(720,480)">
+                <circle r="24" fill="rgba(0,0,0,0.3)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+                <text x="0" y="-14" text-anchor="middle" font-size="10" font-weight="700" fill="var(--accent)">N</text>
+                <text x="0" y="20" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)">S</text>
+                <text x="-18" y="3" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)">W</text>
+                <text x="18" y="3" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.4)">E</text>
+                <line x1="0" y1="-22" x2="0" y2="-18" stroke="var(--accent)" stroke-width="2"/>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div class="route-info">
+          <div class="route-info-title">🚶 路線停站</div>
+          <div id="route-stops-list">
+            <div class="route-stop" data-stop="1">
+              <div class="route-stop-num">1</div>
+              <div class="route-stop-info">
+                <div class="route-stop-name">Stanley Park 斯坦利公園</div>
+                <div class="route-stop-time">08:00 – 11:30 · 3.5h</div>
+                <div class="route-stop-tags">
+                  <span class="route-tag">海濱步道</span>
+                  <span class="route-tag">森林</span>
+                  <span class="route-tag">Totem Poles</span>
+                </div>
+              </div>
+            </div>
+            <div class="route-stop" data-stop="2">
+              <div class="route-stop-num">2</div>
+              <div class="route-stop-info">
+                <div class="route-stop-name">Seawall 海濱步道</div>
+                <div class="route-stop-time">08:30 – 10:30 · 2h</div>
+                <div class="route-stop-tags">
+                  <span class="route-tag">自行車</span>
+                  <span class="route-tag">獅子門大橋</span>
+                </div>
+              </div>
+            </div>
+            <div class="route-stop" data-stop="3">
+              <div class="route-stop-num">3</div>
+              <div class="route-stop-info">
+                <div class="route-stop-name">Gastown 煤氣鎮</div>
+                <div class="route-stop-time">14:30 – 16:00 · 1.5h</div>
+                <div class="route-stop-tags">
+                  <span class="route-tag">歷史街區</span>
+                  <span class="route-tag">蒸汽鐘</span>
+                </div>
+              </div>
+            </div>
+            <div class="route-stop" data-stop="4">
+              <div class="route-stop-num">4</div>
+              <div class="route-stop-info">
+                <div class="route-stop-name">Granville Island 格蘭維爾島</div>
+                <div class="route-stop-time">12:30 – 14:00 · 1.5h</div>
+                <div class="route-stop-tags">
+                  <span class="route-tag">公共市場</span>
+                  <span class="route-tag">午餐</span>
+                </div>
+              </div>
+            </div>
+            <div class="route-stop" data-stop="5">
+              <div class="route-stop-num">5</div>
+              <div class="route-stop-info">
+                <div class="route-stop-name">English Bay Beach 英文灣海灘</div>
+                <div class="route-stop-time">17:30 – 19:00 · 1.5h</div>
+                <div class="route-stop-tags">
+                  <span class="route-tag">日落</span>
+                  <span class="route-tag">海灘</span>
+                </div>
+              </div>
+            </div>
+            <div class="route-stop" data-stop="6">
+              <div class="route-stop-num">6</div>
+              <div class="route-stop-info">
+                <div class="route-stop-name">VanDusen Garden 凡度森花園</div>
+                <div class="route-stop-time">16:00 – 17:30 · 1.5h</div>
+                <div class="route-stop-tags">
+                  <span class="route-tag">植物園</span>
+                  <span class="route-tag">景觀</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Detailed Itinerary -->
+    <div class="slide" id="slide-3">
+      <div class="slide-title" style="margin-bottom: 8px;">完整行程時間軸</div>
+      <div class="slide-subtitle">建議節奏，可自由調整</div>
+      <div class="timeline">
+        <div class="timeline-item animate-fade-up">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">07:30 – 08:00</div>
+          <div class="timeline-title">☕ 早餐 & 咖啡</div>
+          <div class="timeline-desc">JJ Bean (Denman & Davie) 或 49th Parallel Coffee，在 West End 來杯好咖啡，順路前往斯坦利公園</div>
+          <div class="timeline-cost">🍽️ $5–10 · ☕ $5–8</div>
+        </div>
+        <div class="timeline-item animate-fade-up" style="animation-delay: 0.1s">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">08:00 – 09:00</div>
+          <div class="timeline-title">🚲 租車 / 開始步行</div>
+          <div class="timeline-desc">Spokes Bicycle Rentals ($8/小時) 租輛自行車，順時針繞斯坦利公園 — 這是溫哥華最值得做的體驗</div>
+          <div class="timeline-cost">🚲 $8–30 / 自行車租用</div>
+        </div>
+        <div class="timeline-item animate-fade-up" style="animation-delay: 0.2s">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">09:00 – 11:30</div>
+          <div class="timeline-title">🌲 Stanley Park 海濱步道</div>
+          <div class="timeline-desc">沿 Seawall 逆時針骑行 (自行車強制方向)。途經：9 点钟炮、Brockton Point 圖騰柱 (BC 最熱門景點，免費)、獅子門大橋下、Prospect Point 全景、Siwash Rock</div>
+          <div class="timeline-cost">🌳 免費 · 📷 拍照無限量</div>
+        </div>
+        <div class="timeline-item animate-fade-up" style="animation-delay: 0.3s">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">11:30 – 12:30</div>
+          <div class="timeline-title">🌃 Robson Street / 回煤氣鎮</div>
+          <div class="timeline-desc">從 Coal Harbour 出口出來，沿 Robson St 或乘 SkyTrain 回市中心。可以逛逛 BC Place 體育場或 Canada Place</div>
+          <div class="timeline-cost">🚆 $2.30 (Compass Card)</div>
+        </div>
+        <div class="timeline-item animate-fade-up" style="animation-delay: 0.4s">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">12:30 – 14:00</div>
+          <div class="timeline-title">🏝️ Granville Island 午餐</div>
+          <div class="timeline-desc">乘 Aquabus 船 (5 分鐘) 或 SkyTrain 前往。Granville Island Public Market 是溫哥華美食集中地，海鮮、早午餐、亞洲料理全都有。推薦：Fisherman's Daughter 煙燻三文魚</div>
+          <div class="timeline-cost">🍽️ $22–35 · 🚢 $3 Aquabus</div>
+        </div>
+        <div class="timeline-item animate-fade-up" style="animation-delay: 0.5s">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">14:30 – 16:00</div>
+          <div class="timeline-title">🏛️ Gastown 煤氣鎮</div>
+          <div class="timeline-desc">溫哥華最古老的街區，1886 年蒸汽鐘 (每小時整點冒蒸汽)、窄巷、藝術商店、獨立咖啡館。Bill Reid Gallery 可順道參觀原住民藝術</div>
+          <div class="timeline-cost">🏛️ 免費 · ☕ $6–10</div>
+        </div>
+        <div class="timeline-item animate-fade-up" style="animation-delay: 0.6s">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">16:00 – 17:30</div>
+          <div class="timeline-title">🌺 VanDusen Botanical Garden</div>
+          <div class="timeline-desc">20 公頃的亞熱帶植物園，日本庭園、沙漠花園、岩石花園。俯瞰整個溫哥華市景。夏季花卉最盛</div>
+          <div class="timeline-cost">🎫 $25 / 成人</div>
+        </div>
+        <div class="timeline-item animate-fade-up" style="animation-delay: 0.7s">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">17:30 – 19:00</div>
+          <div class="timeline-title">🌅 English Bay Beach 日落</div>
+          <div class="timeline-desc">夏季日落約 20:00 / 冬季約 16:30。坐在沙滩上，看太陽沉入海平面，背景是溫哥華市中心和北岸群山的剪影。這是溫哥華最經典的時刻</div>
+          <div class="timeline-cost">🌅 免費</div>
+        </div>
+        <div class="timeline-item animate-fade-up" style="animation-delay: 0.8s">
+          <div class="timeline-dot"></div>
+          <div class="timeline-time">19:00 – 21:00</div>
+          <div class="timeline-title">🍜 晚餐 (Gastown / Yaletown)</div>
+          <div class="timeline-desc">Gastown 或 Yaletown 有許多優質餐廳：日料、海鮮、亞洲料理。推薦：The Blue Door、Lau's Restaurant、Trevi by the Sea</div>
+          <div class="timeline-cost">🍜 $30–60 / 人</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: Attractions Grid -->
+    <div class="slide" id="slide-4">
+      <div class="slide-title" style="margin-bottom: 8px;">重點景點詳情</div>
+      <div class="slide-subtitle">點擊卡片查看完整資訊</div>
+      <div class="attraction-grid" id="attraction-grid">
+        <div class="attraction-card" data-attraction="1">
+          <div class="attraction-header"></div>
+          <div class="attraction-body">
+            <span class="attraction-icon">🌲</span>
+            <div class="attraction-name">Stanley Park</div>
+            <div class="attraction-category">自然 / 公園</div>
+            <div class="attraction-desc">400 公頃城市森林公園，9 公里海濱步道。BC 最熱門的總訪問景點。</div>
+            <div class="attraction-meta">
+              <div class="attraction-meta-item"><span class="attraction-meta-value">免費</span></div>
+              <div class="attraction-meta-item"><span class="attraction-meta-value">6:00–22:00</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="attraction-card" data-attraction="2">
+          <div class="attraction-header"></div>
+          <div class="attraction-body">
+            <span class="attraction-icon">🚲</span>
+            <div class="attraction-name">Seawall 海濱步道</div>
+            <div class="attraction-category">步道 / 自行車</div>
+            <div class="attraction-desc">世界最長不间断海濱步道，沿途可賞山、海、森林、城市。</div>
+            <div class="attraction-meta">
+              <div class="attraction-meta-item"><span class="attraction-meta-value">免費</span></div>
+              <div class="attraction-meta-item"><span class="attraction-meta-value">全開</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="attraction-card" data-attraction="3">
+          <div class="attraction-header"></div>
+          <div class="attraction-body">
+            <span class="attraction-icon">🏛️</span>
+            <div class="attraction-name">Gastown 煤氣鎮</div>
+            <div class="attraction-category">歷史 / 文化</div>
+            <div class="attraction-desc">溫哥華最古老街區，蒸汽鐘、窄巷、藝術商店、精品咖啡館。</div>
+            <div class="attraction-meta">
+              <div class="attraction-meta-item"><span class="attraction-meta-value">免費</span></div>
+              <div class="attraction-meta-item"><span class="attraction-meta-value">蒸汽鐘整點</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="attraction-card" data-attraction="4">
+          <div class="attraction-header"></div>
+          <div class="attraction-body">
+            <span class="attraction-icon">🏝️</span>
+            <div class="attraction-name">Granville Island</div>
+            <div class="attraction-category">美食 / 市場</div>
+            <div class="attraction-desc">公共市場 + 藝術創作區。海鮮、早午餐、手工商品、街頭表演。</div>
+            <div class="attraction-meta">
+              <div class="attraction-meta-item"><span class="attraction-meta-value">$22–35</span></div>
+              <div class="attraction-meta-item"><span class="attraction-meta-value">9:00–19:00</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="attraction-card" data-attraction="5">
+          <div class="attraction-header"></div>
+          <div class="attraction-body">
+            <span class="attraction-icon">🌺</span>
+            <div class="attraction-name">VanDusen Garden</div>
+            <div class="attraction-category">植物園 / 景觀</div>
+            <div class="attraction-desc">20 公頃亞熱帶植物園，日本庭園、沙漠花園、岩石花園，俯瞰市景。</div>
+            <div class="attraction-meta">
+              <div class="attraction-meta-item"><span class="attraction-meta-value">$25</span></div>
+              <div class="attraction-meta-item"><span class="attraction-meta-value">10:00–19:00</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="attraction-card" data-attraction="6">
+          <div class="attraction-header"></div>
+          <div class="attraction-body">
+            <span class="attraction-icon">🌅</span>
+            <div class="attraction-name">English Bay Beach</div>
+            <div class="attraction-category">海灘 / 日落</div>
+            <div class="attraction-desc">溫哥華最經典日落地點，背景是市中心 + 北岸群山的剪影。</div>
+            <div class="attraction-meta">
+              <div class="attraction-meta-item"><span class="attraction-meta-value">免費</span></div>
+              <div class="attraction-meta-item"><span class="attraction-meta-value">日落 20:00 (夏)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-overlay" id="detail-overlay">
+        <div class="detail-modal" id="detail-modal">
+          <div class="detail-header">
+            <div id="detail-title-area">
+              <div id="detail-icon-area" style="font-size: 28px; margin-bottom: 4px;"></div>
+              <div id="detail-name" style="font-size: 24px; font-weight: 700;"></div>
+              <div id="detail-category" style="font-size: 14px; color: var(--accent); margin-top: 4px;"></div>
+            </div>
+            <button class="detail-close" id="detail-close">✕</button>
+          </div>
+          <div class="detail-body" id="detail-body"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: Tips -->
+    <div class="slide" id="slide-5">
+      <div class="slide-title" style="margin-bottom: 8px;">實戰貼士</div>
+      <div class="slide-subtitle">從溫哥華當地人的角度分享</div>
+      <div class="tip-grid">
+        <div class="tip-card animate-fade-up">
+          <div class="tip-icon">🌧️</div>
+          <div class="tip-title">溫哥華下雨怎麼辦？</div>
+          <div class="tip-desc">帶輕便雨衣 (非雨傘) — 海濱步道風大。下雨時改去 Bill Reid Gallery (Gastown 內) 或 Vancouver Lookout (Gastown 觀景台，$20) 避雨看雨景。</div>
+        </div>
+        <div class="tip-card animate-fade-up" style="animation-delay: 0.1s">
+          <div class="tip-icon">🚆</div>
+          <div class="tip-title">交通：Compass Card 最佳</div>
+          <div class="tip-desc">Compass Card 單程 $2.30，1 日通票 $11.85。本行程建議單程 x4 比 1 日通票便宜。SkyTrain + Aquabus + 步行即可覆蓋全線。</div>
+        </div>
+        <div class="tip-card animate-fade-up" style="animation-delay: 0.2s">
+          <div class="tip-icon">📱</div>
+          <div class="tip-title">必備 App</div>
+          <div class="tip-desc">Citymapper (公車/天軌) · TransLink (1 日通票) · AllTrails (步行路線) · Weather (溫哥華天氣多變，隨時更新) · Google Maps (無死角的步行導航)</div>
+        </div>
+        <div class="tip-card animate-fade-up" style="animation-delay: 0.3s">
+          <div class="tip-icon">⚠️</div>
+          <div class="tip-title">避坑提醒</div>
+          <div class="tip-desc">Stanley Park 自行車必須逆時針 (規則) · Gastown 蒸汽鐘整點排隊拍照會擋到路 · VanDusen 18:00 開始清園 (夏季) · Granville Island 週五/六人多，建議週一到四去</div>
+        </div>
+        <div class="tip-card animate-fade-up" style="animation-delay: 0.4s">
+          <div class="tip-icon">💪</div>
+          <div class="tip-title">體力分配</div>
+          <div class="tip-desc">全天步行 13–18 公里 (含 bike 路段)。建议穿舒適的運動鞋。VanDusen 後段較陡，建議把VanDusen放在下午體力還行時。Sunset 前確保到 English Bay (步行 10 分鐘)。</div>
+        </div>
+        <div class="tip-card animate-fade-up" style="animation-delay: 0.5s">
+          <div class="tip-icon">🎯</div>
+          <div class="tip-title">如果只有 3 小時</div>
+          <div class="tip-desc">只選 3 個必看：(1) Stanley Park Seawall 骑行 1h (2) Granville Island 午餐 1.5h (3) English Bay 日落 30min。這是最經典的「溫哥華三件套」。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: Budget -->
+    <div class="slide" id="slide-6">
+      <div class="slide-title" style="margin-bottom: 8px;">預算一覽</div>
+      <div class="slide-subtitle">以一人 / 全日計算，2026 年估算 (CAD)</div>
+      <table class="budget-table">
+        <thead>
+          <tr>
+            <th>項目</th>
+            <th>說明</th>
+            <th>費用</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>☕ 早餐 / 咖啡</td>
+            <td>JJ Bean / 49th Parallel</td>
+            <td class="price">$10–15</td>
+          </tr>
+          <tr>
+            <td>🚲 自行車租用</td>
+            <td>Spokes Bicycle Rentals (1-3h)</td>
+            <td class="price">$16–30</td>
+          </tr>
+          <tr>
+            <td>🌲 Stanley Park</td>
+            <td>免費 (Totem Poles, Seawall)</td>
+            <td class="price">免費</td>
+          </tr>
+          <tr>
+            <td>🚆 交通 (x4 單程)</td>
+            <td>Compass Card 儲值</td>
+            <td class="price">$9.20</td>
+          </tr>
+          <tr>
+            <td>🚢 Aquabus</td>
+            <td>SeaBus / Granville Island 往返</td>
+            <td class="price">$6–12</td>
+          </tr>
+          <tr>
+            <td>🍽️ 午餐</td>
+            <td>Granville Island 市場 / 餐廳</td>
+            <td class="price">$22–35</td>
+          </tr>
+          <tr>
+            <td>🌺 VanDusen Garden</td>
+            <td>成人門票 (可選)</td>
+            <td class="price">$25</td>
+          </tr>
+          <tr>
+            <td>🍜 晚餐</td>
+            <td>Gastown / Yaletown 餐廳</td>
+            <td class="price">$30–60</td>
+          </tr>
+          <tr class="budget-total">
+            <td>合計 (不含住宿)</td>
+            <td></td>
+            <td class="price" style="font-size: 22px;">$95–130</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SLIDE 7: Summary -->
+    <div class="slide" id="slide-7">
+      <div class="slide-title" style="margin-bottom: 8px;">一日遊概覽</div>
+      <div class="slide-subtitle">總覽數字</div>
+      <div class="summary-content">
+        <div>
+          <div class="summary-stat" style="margin-bottom: 20px;">
+            <div class="summary-stat-label">📍 景點數</div>
+            <div class="summary-stat-value">6</div>
+            <div style="font-size: 14px; color: var(--ink-muted); margin-top: 4px;">Stanley Park · Seawall · Gastown · Granville Island · VanDusen · English Bay</div>
+          </div>
+          <div class="summary-stat" style="margin-bottom: 20px;">
+            <div class="summary-stat-label">🚶 總步行距離</div>
+            <div class="summary-stat-value">13–18 km</div>
+            <div style="font-size: 14px; color: var(--ink-muted); margin-top: 4px;">含 Stanley Park 繞圈 + 海濱步道 + 城區步行</div>
+          </div>
+          <div class="summary-stat">
+            <div class="summary-stat-label">💰 總花費 (不含住宿)</div>
+            <div class="summary-stat-value">$95–130</div>
+            <div style="font-size: 14px; color: var(--ink-muted); margin-top: 4px;">CAD / 人 — 含交通、午餐、晚餐、門票</div>
+          </div>
+        </div>
+        <div class="summary-checklist">
+          <div style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">📋 出发前必帶</div>
+          <div class="checklist-item"><div class="checklist-check">✓</div><div class="checklist-text">舒適運動鞋 (全天 13–18km)</div></div>
+          <div class="checklist-item"><div class="checklist-check">✓</div><div class="checklist-text">輕便雨衣 (溫哥華下雨)</div></div>
+          <div class="checklist-item"><div class="checklist-check">✓</div><div class="checklist-text">Sunscreen + 帽子 (夏季)</div></div>
+          <div class="checklist-item"><div class="checklist-check">✓</div><div class="checklist-text">Compass Card 或信用卡</div></div>
+          <div class="checklist-item"><div class="checklist-check">✓</div><div class="checklist-text">Citymapper / Google Maps App</div></div>
+          <div class="checklist-item"><div class="checklist-check">✓</div><div class="checklist-text">行動電源 (拍照一天)</div></div>
+          <div class="checklist-item"><div class="checklist-check">✓</div><div class="checklist-text">$50–100 現金 (小費 / 餐廳)</div></div>
+          <div class="checklist-item"><div class="checklist-check">✓</div><div class="checklist-text">相機 / 行動裝置 (拍照)</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: Ending -->
+    <div class="slide" id="slide-8">
+      <div class="ending-content">
+        <div class="ending-icon animate-fade-up">🌅</div>
+        <h2 class="ending-title animate-fade-up" style="animation-delay: 0.1s">
+          準備好出发了吗？
+        </h2>
+        <p class="ending-subtitle animate-fade-up" style="animation-delay: 0.2s">
+          溫哥華 — 海、山、森林、城市，都在 24 小時裡等你。<br>
+          願你在日落的海灘上，擁有屬於自己的那一段記憶。
+        </p>
+        <button class="ending-cta animate-fade-up" style="animation-delay: 0.3s" onclick="goToSlide(1)">
+          🔄 重新播放
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="deck-nav">
+      <div class="nav-arrows">
+        <button class="nav-arrow" id="prev-btn" onclick="prevSlide()">←</button>
+        <button class="nav-arrow" id="next-btn" onclick="nextSlide()">→</button>
+      </div>
+      <div class="slide-counter" id="slide-counter">1 / 8</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <div class="kbd-hint"><span class="kbd">←</span> <span class="kbd">→</span> 翻頁 · <span class="kbd">Home</span> 回開頭</div>
+  </div>
+</div>
+
+<script>
+// === Slide Data ===
+const attractions = {
+  1: {
+    name: 'Stanley Park 斯坦利公園',
+    icon: '🌲',
+    category: '自然 / 公園',
+    desc: '400 公頃城市森林公園，9 公里海濱步道。BC 最熱門的總訪問景點。',
+    details: `
+      <div class="detail-section"><div class="detail-section-title">📍 地址</div><div class="detail-section-content">600 Pipeline Road, Vancouver, BC V6G 3J4</div></div>
+      <div class="detail-section"><div class="detail-section-title">⏰ 開放時間</div><div class="detail-section-content">6:00 AM – 10:00 PM (全開)</div></div>
+      <div class="detail-section"><div class="detail-section-title">💰 費用</div><div class="detail-section-content">免費。Brockton Point Totem Poles (BC 最熱門景點) 也免費。Vancouver Aquarium 在公園內，額外 $35–48。</div></div>
+      <div class="detail-section"><div class="detail-section-title">📝 建議時間</div><div class="detail-section-content">90–180 分鐘 (繞圈 / 部分路段)</div></div>
+      <div class="detail-section"><div class="detail-section-title">✨ 不可錯過</div><div class="detail-section-content">• Brockton Point Totem Poles (BC 最熱門景點，免費)<br>• Prospect Point 全景 (最棒的市區 + 獅子門大橋全景)<br>• 9 O'Clock Gun (整點鳴炮)<br>• Siwash Rock (岩石地標)<br>• Lions Gate Bridge 獅子門大橋</div></div>
+      <div class="detail-section"><div class="detail-section-title">🚲 自行車</div><div class="detail-section-content">Spokes Bicycle Rentals (Denman & West Georgia) $8/小時。Seawall 逆時針是強制方向。</div></div>
+    `
+  },
+  2: {
+    name: 'Seawall 海濱步道',
+    icon: '🚲',
+    category: '步道 / 自行車',
+    desc: '世界最長不间断海濱步道，沿途可賞山、海、森林、城市。',
+    details: `
+      <div class="detail-section"><div class="detail-section-title">📍 位置</div><div class="detail-section-content">沿 Burrard Inlet 海濱繞溫哥華市中心</div></div>
+      <div class="detail-section"><div class="detail-section-title">📏 長度</div><div class="detail-section-content">約 30 公里 (全線)</div></div>
+      <div class="detail-section"><div class="detail-section-title">📝 建議時段</div><div class="detail-section-content">本行程取 Stanley Park 段，約 9 公里，骑行 45–60 分鐘 / 步行 2–3 小時</div></div>
+      <div class="detail-section"><div class="detail-section-title">✨ 亮點</div><div class="detail-section-content">• Brockton Point Totem Poles (BC 最熱門景點)<br>• Lions Gate Bridge 獅子門大橋 (從下方穿越)<br>• Prospect Point (絕景)<br>• English Bay Beach (日落地點)<br>• 全程看海，視野 180°</div></div>
+      <div class="detail-section"><div class="detail-section-title">⚠️ 注意</div><div class="detail-section-content">• 自行車必須逆時針 (規則)<br>• 風大時戴帽子 / 雨衣<br>• 部分路段坡度大 (從 Brockton Point 到 English Bay)</div></div>
+    `
+  },
+  3: {
+    name: 'Gastown 煤氣鎮',
+    icon: '🏛️',
+    category: '歷史 / 文化',
+    desc: '溫哥華最古老街區，蒸汽鐘、窄巷、藝術商店、精品咖啡館。',
+    details: `
+      <div class="detail-section"><div class="detail-section-title">📍 地址</div><div class="detail-section-content">Gastown, Vancouver, BC</div></div>
+      <div class="detail-section"><div class="detail-section-title">⏰ 開放時間</div><div class="detail-section-content">全天 (商店 9:00–20:00)</div></div>
+      <div class="detail-section"><div class="detail-section-title">💰 費用</div><div class="detail-section-content">免費入場。蒸汽鐘免費觀看。B.C. Museum (在 Gastown 附近) $25。</div></div>
+      <div class="detail-section"><div class="detail-section-title">✨ 不可錯過</div><div class="detail-section-content">• Gastown Steam Clock 蒸汽鐘 (整點冒蒸汽，1977 年)<br>• Bill Reid Gallery (原住民藝術，$15)<br>• Paddy's Pub (歷史酒吧)<br>• 藝術商店 + 獨立咖啡館<br>• 窄巷 + 復古街道氛圍</div></div>
+      <div class="detail-section"><div class="detail-section-title">📝 建議時間</div><div class="detail-section-content">60–90 分鐘</div></div>
+      <div class="detail-section"><div class="detail-section-title">⚠️ 注意</div><div class="detail-section-content">蒸汽鐘整點排隊拍照，避開高峰時段。晚上 Gastown 部分區域有安全問題，建議白天去。</div></div>
+    `
+  },
+  4: {
+    name: 'Granville Island 格蘭維爾島',
+    icon: '🏝️',
+    category: '美食 / 市場',
+    desc: '公共市場 + 藝術創作區。海鮮、早午餐、手工商品、街頭表演。',
+    details: `
+      <div class="detail-section"><div class="detail-section-title">📍 地址</div><div class="detail-section-content">1625 Granville Island, Vancouver, BC V6C 6H4</div></div>
+      <div class="detail-section"><div class="detail-section-title">⏰ 開放時間</div><div class="detail-section-content">市場 9:00–19:00 (全年)</div></div>
+      <div class="detail-section"><div class="detail-section-title">💰 費用</div><div class="detail-section-content">入場免費。午餐 $22–35 / 人。</div></div>
+      <div class="detail-section"><div class="detail-section-title">✨ 推薦餐廳</div><div class="detail-section-content">• Fisherman's Daughter — 煙燻三文魚 ($35)<br>• Granville Island Public Market — 海鮮 + 亞洲料理 ($22)<br>• Seafood City — 海鮮丼 ($28)<br>• The Little Fish — 地中海料理 ($30)</div></div>
+      <div class="detail-section"><div class="detail-section-title">🚢 交通</div><div class="detail-section-content">Aquabus 船 (Waterfront Station → Granville Island, 5 分鐘, $3)<br>SkyTrain (Granville Station 下車)</div></div>
+      <div class="detail-section"><div class="detail-section-title">📝 建議時間</div><div class="detail-section-content">60–90 分鐘 (含午餐)</div></div>
+    `
+  },
+  5: {
+    name: 'VanDusen Botanical Garden 凡度森花園',
+    icon: '🌺',
+    category: '植物園 / 景觀',
+    desc: '20 公頃亞熱帶植物園，日本庭園、沙漠花園、岩石花園，俯瞰市景。',
+    details: `
+      <div class="detail-section"><div class="detail-section-title">📍 地址</div><div class="detail-section-content">5251 Oak Street, Vancouver, BC V6M 4H1</div></div>
+      <div class="detail-section"><div class="detail-section-title">⏰ 開放時間</div><div class="detail-section-content">4–9月 9:00–19:00 / 10–3月 9:00–17:00</div></div>
+      <div class="detail-section"><div class="detail-section-title">💰 費用</div><div class="detail-section-content">成人 $25 / 學生 $20 / 5–17歲 $12</div></div>
+      <div class="detail-section"><div class="detail-section-title">✨ 亮點花園</div><div class="detail-section-content">• 日本庭園 (茶室 + 池)<br>• 沙漠花園 (仙人掌 + 多肉)<br>• 岩石花園 (山景)<br>• 溫室 (熱帶植物)<br>• 俯瞰整個溫哥華市景 + 北岸</div></div>
+      <div class="detail-section"><div class="detail-section-title">📝 建議時間</div><div class="detail-section-content">60–90 分鐘</div></div>
+      <div class="detail-section"><div class="detail-section-title">⚠️ 注意</div><div class="detail-section-content">18:00 (夏季) / 16:00 (冬季) 開始清園。部分路段較陡，注意體力。</div></div>
+    `
+  },
+  6: {
+    name: 'English Bay Beach 英文灣海灘',
+    icon: '🌅',
+    category: '海灘 / 日落',
+    desc: '溫哥華最經典日落地點，背景是市中心 + 北岸群山的剪影。',
+    details: `
+      <div class="detail-section"><div class="detail-section-title">📍 位置</div><div class="detail-section-content">英文灣海灘，Stanley Park 東側</div></div>
+      <div class="detail-section"><div class="detail-section-title">⏰ 最佳日落時間</div><div class="detail-section-content">夏季 20:00–21:00 / 冬季 16:30–17:00</div></div>
+      <div class="detail-section"><div class="detail-section-title">💰 費用</div><div class="detail-section-content">免費</div></div>
+      <div class="detail-section"><div class="detail-section-title">✨ 亮點</div><div class="detail-section-content">• 日落時的溫哥華市中心剪影<br>• 北岸群山背景<br>• 冬季：Cannibalism Festival (跨年派對)<br>• 夏季：街頭藝術家表演<br>• 最佳拍照時間：日落前 30 分鐘 (Golden Hour)</div></div>
+      <div class="detail-section"><div class="detail-section-title">📝 建議</div><div class="detail-section-content">日落前 30 分鐘抵達。帶件外套 (海邊風大)。</div></div>
+    `
+  }
+};
+
+// === Slide Navigation ===
+let currentSlide = 1;
+const totalSlides = 8;
+
+function goToSlide(n) {
+  if (n < 1 || n > totalSlides) return;
+  document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+  const target = document.getElementById('slide-' + n);
+  if (target) target.classList.add('active');
+  currentSlide = n;
+  updateUI();
+  localStorage.setItem('vancouver-slide', n);
+}
+
+function nextSlide() { goToSlide(currentSlide + 1); }
+function prevSlide() { goToSlide(currentSlide - 1); }
+
+function updateUI() {
+  document.getElementById('slide-counter').textContent = currentSlide + ' / ' + totalSlides;
+  document.getElementById('progress-fill').style.width = ((currentSlide / totalSlides) * 100) + '%';
+  document.getElementById('prev-btn').disabled = currentSlide === 1;
+  document.getElementById('next-btn').disabled = currentSlide === totalSlides;
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === 'PageDown') nextSlide();
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+  if (e.key === 'Home') goToSlide(1);
+  if (e.key === 'End') goToSlide(totalSlides);
+});
+
+// === Attraction Detail Modal ===
+function showAttraction(id) {
+  const a = attractions[id];
+  if (!a) return;
+  document.getElementById('detail-name').textContent = a.name;
+  document.getElementById('detail-icon-area').textContent = a.icon;
+  document.getElementById('detail-category').textContent = a.category;
+  document.getElementById('detail-body').innerHTML = a.details;
+  document.getElementById('detail-overlay').classList.add('visible');
+  // Highlight card
+  document.querySelectorAll('.attraction-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector(`[data-attraction="${id}"]`).classList.add('selected');
+}
+
+document.getElementById('detail-close').addEventListener('click', () => {
+  document.getElementById('detail-overlay').classList.remove('visible');
+  document.querySelectorAll('.attraction-card').forEach(c => c.classList.remove('selected'));
+});
+
+document.getElementById('detail-overlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) {
+    document.getElementById('detail-overlay').classList.remove('visible');
+    document.querySelectorAll('.attraction-card').forEach(c => c.classList.remove('selected'));
+  }
+});
+
+// Attraction card click
+document.querySelectorAll('.attraction-card').forEach(card => {
+  card.addEventListener('click', () => showAttraction(card.dataset.attraction));
+});
+
+// === Route Map Stop Click ===
+document.querySelectorAll('.route-stop').forEach(stop => {
+  stop.addEventListener('click', () => {
+    document.querySelectorAll('.route-stop').forEach(s => s.classList.remove('active'));
+    stop.classList.add('active');
+    const stopNum = stop.dataset.stop;
+    const names = {
+      '1': 'Stanley Park', '2': 'Seawall', '3': 'Gastown',
+      '4': 'Granville Island', '5': 'English Bay', '6': 'VanDusen'
+    };
+    document.getElementById('map-tooltip').textContent = `📍 ${names[stopNum]}`;
+  });
+});
+
+// SVG stop circles
+document.querySelectorAll('.stop-circle').forEach(stop => {
+  stop.addEventListener('click', () => {
+    document.querySelectorAll('.route-stop').forEach(s => s.classList.remove('active'));
+    const stopNum = stop.dataset.stop;
+    const listStop = document.querySelector(`.route-stop[data-stop="${stopNum}"]`);
+    if (listStop) {
+      listStop.classList.add('active');
+      listStop.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    const names = {
+      '1': 'Stanley Park', '2': 'Seawall', '3': 'Gastown',
+      '4': 'Granville Island', '5': 'English Bay', '6': 'VanDusen'
+    };
+    document.getElementById('map-tooltip').textContent = `📍 ${names[stopNum]}`;
+  });
+});
+
+// === Touch Support ===
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+  const diff = e.changedTouches[0].clientX - touchStartX;
+  if (diff > 50) prevSlide();
+  if (diff < -50) nextSlide();
+});
+
+// === Init ===
+const savedSlide = localStorage.getItem('vancouver-slide');
+if (savedSlide) goToSlide(parseInt(savedSlide));
+updateUI();
+
+// Fix: hide kbd-hint on non-slide-1 slides
+function updateKbdHint() {
+  const hints = document.querySelectorAll('.kbd-hint');
+  hints.forEach(h => { h.style.display = currentSlide === 1 ? 'block' : 'none'; });
+}
+const origUpdate = updateUI;
+updateUI = function() { origUpdate(); updateKbdHint(); };
+updateKbdHint();
+</script>
+</body>
+</html>
