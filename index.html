@@ -550,6 +550,7 @@ html, body {
   .deck-viewport {
     transform: none !important; will-change: auto;
     overflow: visible; /* 桌面規則是 hidden，直式模式內容比 viewport 高，必須放開 */
+    height: auto; min-height: 100vh; /* 桌面是 height:100vh，會把高度釘死導致不能捲 */
   }
 
   /* deck 變成可捲動的直式文件，不再是固定 1080px */
