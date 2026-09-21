@@ -241,8 +241,18 @@ html, body {
 }
 
 /* SVG interactive stops */
-.stop-circle { cursor: pointer; transition: transform 0.2s; }
+.stop-circle {
+  cursor: pointer; transition: transform 0.2s;
+  pointer-events: auto; /* 顯式宣告：縮放 transform 下的點擊命中率 */
+  touch-action: manipulation; /* 行動裝置單次 tap 即觸發，無 300ms 延遲 */
+}
 .stop-circle:hover { transform: scale(1.15); }
+.stop-circle.active { transform: scale(1.25); }
+.stop-pulse {
+  animation: pulse 2s ease-in-out infinite;
+  transform-origin: center;
+  transform-box: fill-box; /* SVG: 讓 transform 相對圓心而非 viewport 原點 */
+}
 .stop-label {
   font-size: 12px; font-weight: 600; fill: var(--ink);
   pointer-events: none;
@@ -1210,6 +1220,16 @@ function updateUI() {
 
 // Keyboard navigation
 document.addEventListener('keydown', (e) => {
+  // Modal 開時 ESC 關閉它，且不翻頁（避免 ESC 同時觸發導航）
+  if (e.key === 'Escape') {
+    const overlay = document.getElementById('detail-overlay');
+    if (overlay && overlay.classList.contains('visible')) {
+      overlay.classList.remove('visible');
+      document.querySelectorAll('.attraction-card').forEach(c => c.classList.remove('selected'));
+      e.stopPropagation();
+      return;
+    }
+  }
   if (e.key === 'ArrowRight' || e.key === 'PageDown') nextSlide();
   if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
   if (e.key === 'Home') goToSlide(1);
@@ -1251,8 +1271,12 @@ document.querySelectorAll('.attraction-card').forEach(card => {
 document.querySelectorAll('.route-stop').forEach(stop => {
   stop.addEventListener('click', () => {
     document.querySelectorAll('.route-stop').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.stop-circle').forEach(s => s.classList.remove('active'));
     stop.classList.add('active');
+    // 同步高亮地圖上對應的停站圓圈（雙向連動）
     const stopNum = stop.dataset.stop;
+    const mapStop = document.querySelector(`.stop-circle[data-stop="${stopNum}"]`);
+    if (mapStop) mapStop.classList.add('active');
     const names = {
       '1': 'Stanley Park', '2': 'Seawall', '3': 'Gastown',
       '4': 'Granville Island', '5': 'English Bay', '6': 'VanDusen'
@@ -1265,6 +1289,8 @@ document.querySelectorAll('.route-stop').forEach(stop => {
 document.querySelectorAll('.stop-circle').forEach(stop => {
   stop.addEventListener('click', () => {
     document.querySelectorAll('.route-stop').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.stop-circle').forEach(s => s.classList.remove('active'));
+    stop.classList.add('active');
     const stopNum = stop.dataset.stop;
     const listStop = document.querySelector(`.route-stop[data-stop="${stopNum}"]`);
     if (listStop) {
