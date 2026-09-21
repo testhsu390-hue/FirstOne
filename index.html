@@ -1364,12 +1364,9 @@ function updateUI() {
 
 // Keyboard navigation
 document.addEventListener('keydown', (e) => {
-  // Modal 開時 ESC 關閉它，且不翻頁（避免 ESC 同時觸發導航）
+  // Modal 開時 ESC 關閉它（含返回原處），且不翻頁
   if (e.key === 'Escape') {
-    const overlay = document.getElementById('detail-overlay');
-    if (overlay && overlay.classList.contains('visible')) {
-      overlay.classList.remove('visible');
-      document.querySelectorAll('.attraction-card').forEach(c => c.classList.remove('selected'));
+    if (closeDetail()) {
       e.stopPropagation();
       return;
     }
@@ -1381,9 +1378,19 @@ document.addEventListener('keydown', (e) => {
 });
 
 // === Attraction Detail Modal ===
-function showAttraction(id) {
+// 記錄 modal 從哪裡被打開（來源 slide + 捲動位置），關閉時還原回原處。
+// 從路線停站/地圖圓圈點進來 → 回到 slide 2；從景點卡片點進來 → 留在 slide 4。
+let modalOrigin = null; // { slide: number, scrollYIgnored: true }
+
+function showAttraction(id, origin) {
   const a = attractions[id];
   if (!a) return;
+  // 只有「跨頁跳轉過來」才記錄來源；同頁開 modal 不需要還原
+  if (origin && origin.slide !== currentSlide) {
+    modalOrigin = { slide: origin.slide };
+  } else {
+    modalOrigin = null;
+  }
   document.getElementById('detail-name').textContent = a.name;
   document.getElementById('detail-icon-area').textContent = a.icon;
   document.getElementById('detail-category').textContent = a.category;
@@ -1391,22 +1398,34 @@ function showAttraction(id) {
   document.getElementById('detail-overlay').classList.add('visible');
   // Highlight card
   document.querySelectorAll('.attraction-card').forEach(c => c.classList.remove('selected'));
-  document.querySelector(`[data-attraction="${id}"]`).classList.add('selected');
+  const card = document.querySelector(`[data-attraction="${id}"]`);
+  if (card) card.classList.add('selected');
 }
 
-document.getElementById('detail-close').addEventListener('click', () => {
-  document.getElementById('detail-overlay').classList.remove('visible');
+// 關閉 modal 的單一入口（✕ / 背景點擊 / ESC 共用），
+// 關閉後若 modal 是跨頁跳轉開的，就還原到來源 slide。
+function closeDetail() {
+  const overlay = document.getElementById('detail-overlay');
+  if (!overlay || !overlay.classList.contains('visible')) return false;
+  overlay.classList.remove('visible');
   document.querySelectorAll('.attraction-card').forEach(c => c.classList.remove('selected'));
-});
+  if (modalOrigin && modalOrigin.slide) {
+    const back = modalOrigin.slide;
+    modalOrigin = null;
+    goToSlide(back);
+  } else {
+    modalOrigin = null;
+  }
+  return true;
+}
+
+document.getElementById('detail-close').addEventListener('click', closeDetail);
 
 document.getElementById('detail-overlay').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) {
-    document.getElementById('detail-overlay').classList.remove('visible');
-    document.querySelectorAll('.attraction-card').forEach(c => c.classList.remove('selected'));
-  }
+  if (e.target === e.currentTarget) closeDetail();
 });
 
-// Attraction card click
+// Attraction card click（同頁開啟，關閉時留在原頁）
 document.querySelectorAll('.attraction-card').forEach(card => {
   card.addEventListener('click', () => showAttraction(card.dataset.attraction));
 });
@@ -1429,9 +1448,11 @@ document.querySelectorAll('.route-stop').forEach(stop => {
     // 跳到該景點的介紹頁（slide 4）並開啟詳情 modal
     // ⚠️ route-stop 編號與 attraction 編號在 5/6 相反：
     //    stop 5 = English Bay = attraction 6；stop 6 = VanDusen = attraction 5
+    // 記錄來源頁（slide 2），關閉 modal 時會回到這裡
+    const origin = { slide: currentSlide };
     goToSlide(4);
     const STOP_TO_ATTRACTION = { '1':'1','2':'2','3':'3','4':'4','5':'6','6':'5' };
-    showAttraction(STOP_TO_ATTRACTION[stopNum] || stopNum);
+    showAttraction(STOP_TO_ATTRACTION[stopNum] || stopNum, origin);
   });
 });
 
@@ -1476,9 +1497,11 @@ document.querySelectorAll('.stop-circle').forEach(stop => {
     document.getElementById('map-tooltip').textContent = `📍 ${names[stopNum]}`;
     // 跳到該景點的介紹頁（slide 4）並開啟詳情 modal（與清單行為一致）
     // ⚠️ stop 編號與 attraction 編號在 5/6 相反，需轉換
+    // 記錄來源頁，關閉 modal 時回到這裡
+    const origin = { slide: currentSlide };
     goToSlide(4);
     const STOP_TO_ATTRACTION = { '1':'1','2':'2','3':'3','4':'4','5':'6','6':'5' };
-    showAttraction(STOP_TO_ATTRACTION[stopNum] || stopNum);
+    showAttraction(STOP_TO_ATTRACTION[stopNum] || stopNum, origin);
   });
 });
 
