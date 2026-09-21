@@ -292,6 +292,20 @@ html, body {
   color: var(--success); margin-top: 4px;
 }
 
+/* 可跳轉到地圖的時間軸項目（data-goto 標記的地點） */
+.timeline-item[data-goto] {
+  cursor: pointer;
+  border-radius: 10px;
+  margin: 0 -10px; padding-left: 10px; padding-right: 10px;
+  transition: background 0.15s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.timeline-item[data-goto]:hover { background: rgba(255,255,255,0.04); }
+.timeline-item[data-goto]:hover .timeline-title::after {
+  content: ' 🌐'; font-size: 13px; opacity: 0.7;
+}
+
 /* Slide 4: Attraction details grid */
 .attraction-grid {
   display: grid; grid-template-columns: repeat(3, 1fr);
@@ -916,7 +930,7 @@ html, body {
           <div class="timeline-desc">Spokes Bicycle Rentals ($8/小時) 租輛自行車，順時針繞斯坦利公園 — 這是溫哥華最值得做的體驗</div>
           <div class="timeline-cost">🚲 $8–30 / 自行車租用</div>
         </div>
-        <div class="timeline-item animate-fade-up" style="animation-delay: 0.2s">
+        <div class="timeline-item animate-fade-up" data-goto="1" style="animation-delay: 0.2s">
           <div class="timeline-dot"></div>
           <div class="timeline-time">09:00 – 11:30</div>
           <div class="timeline-title">🌲 Stanley Park 海濱步道</div>
@@ -930,28 +944,28 @@ html, body {
           <div class="timeline-desc">從 Coal Harbour 出口出來，沿 Robson St 或乘 SkyTrain 回市中心。可以逛逛 BC Place 體育場或 Canada Place</div>
           <div class="timeline-cost">🚆 $2.30 (Compass Card)</div>
         </div>
-        <div class="timeline-item animate-fade-up" style="animation-delay: 0.4s">
+        <div class="timeline-item animate-fade-up" data-goto="4" style="animation-delay: 0.4s">
           <div class="timeline-dot"></div>
           <div class="timeline-time">12:30 – 14:00</div>
           <div class="timeline-title">🏝️ Granville Island 午餐</div>
           <div class="timeline-desc">乘 Aquabus 船 (5 分鐘) 或 SkyTrain 前往。Granville Island Public Market 是溫哥華美食集中地，海鮮、早午餐、亞洲料理全都有。推薦：Fisherman's Daughter 煙燻三文魚</div>
           <div class="timeline-cost">🍽️ $22–35 · 🚢 $3 Aquabus</div>
         </div>
-        <div class="timeline-item animate-fade-up" style="animation-delay: 0.5s">
+        <div class="timeline-item animate-fade-up" data-goto="3" style="animation-delay: 0.5s">
           <div class="timeline-dot"></div>
           <div class="timeline-time">14:30 – 16:00</div>
           <div class="timeline-title">🏛️ Gastown 煤氣鎮</div>
           <div class="timeline-desc">溫哥華最古老的街區，1886 年蒸汽鐘 (每小時整點冒蒸汽)、窄巷、藝術商店、獨立咖啡館。Bill Reid Gallery 可順道參觀原住民藝術</div>
           <div class="timeline-cost">🏛️ 免費 · ☕ $6–10</div>
         </div>
-        <div class="timeline-item animate-fade-up" style="animation-delay: 0.6s">
+        <div class="timeline-item animate-fade-up" data-goto="5" style="animation-delay: 0.6s">
           <div class="timeline-dot"></div>
           <div class="timeline-time">16:00 – 17:30</div>
           <div class="timeline-title">🌺 VanDusen Botanical Garden</div>
           <div class="timeline-desc">20 公頃的亞熱帶植物園，日本庭園、沙漠花園、岩石花園。俯瞰整個溫哥華市景。夏季花卉最盛</div>
           <div class="timeline-cost">🎫 $25 / 成人</div>
         </div>
-        <div class="timeline-item animate-fade-up" style="animation-delay: 0.7s">
+        <div class="timeline-item animate-fade-up" data-goto="6" style="animation-delay: 0.7s">
           <div class="timeline-dot"></div>
           <div class="timeline-time">17:30 – 19:00</div>
           <div class="timeline-title">🌅 English Bay Beach 日落</div>
@@ -1412,6 +1426,31 @@ document.querySelectorAll('.route-stop').forEach(stop => {
       '4': 'Granville Island', '5': 'English Bay', '6': 'VanDusen'
     };
     document.getElementById('map-tooltip').textContent = `📍 ${names[stopNum]}`;
+    // 跳到該景點的介紹頁（slide 4）並開啟詳情 modal
+    goToSlide(4);
+    showAttraction(stopNum);
+  });
+});
+
+// === Timeline → 地圖跳轉 ===
+// 時間軸上有 data-goto 的項目點擊後切到路線總覽（slide 2），
+// 並在地圖上高亮該停站（tooltip + 圓圈 + 清單三處同步）。
+document.querySelectorAll('.timeline-item[data-goto]').forEach(item => {
+  item.addEventListener('click', () => {
+    const stopNum = item.dataset.goto;
+    goToSlide(2);
+    // 觸發既有的 route-stop 點擊邏輯（不含它現在的跳到 slide 4 動作）
+    document.querySelectorAll('.route-stop').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.stop-circle').forEach(s => s.classList.remove('active'));
+    const listStop = document.querySelector(`.route-stop[data-stop="${stopNum}"]`);
+    const mapStop = document.querySelector(`.stop-circle[data-stop="${stopNum}"]`);
+    if (listStop) listStop.classList.add('active');
+    if (mapStop) mapStop.classList.add('active');
+    const names = {
+      '1': 'Stanley Park', '2': 'Seawall', '3': 'Gastown',
+      '4': 'Granville Island', '5': 'English Bay', '6': 'VanDusen'
+    };
+    document.getElementById('map-tooltip').textContent = `📍 ${names[stopNum]}`;
   });
 });
 
@@ -1432,6 +1471,9 @@ document.querySelectorAll('.stop-circle').forEach(stop => {
       '4': 'Granville Island', '5': 'English Bay', '6': 'VanDusen'
     };
     document.getElementById('map-tooltip').textContent = `📍 ${names[stopNum]}`;
+    // 跳到該景點的介紹頁（slide 4）並開啟詳情 modal（與清單行為一致）
+    goToSlide(4);
+    showAttraction(stopNum);
   });
 });
 
