@@ -958,14 +958,14 @@ html, body {
           <div class="timeline-desc">溫哥華最古老的街區，1886 年蒸汽鐘 (每小時整點冒蒸汽)、窄巷、藝術商店、獨立咖啡館。Bill Reid Gallery 可順道參觀原住民藝術</div>
           <div class="timeline-cost">🏛️ 免費 · ☕ $6–10</div>
         </div>
-        <div class="timeline-item animate-fade-up" data-goto="5" style="animation-delay: 0.6s">
+        <div class="timeline-item animate-fade-up" data-goto="6" style="animation-delay: 0.6s">
           <div class="timeline-dot"></div>
           <div class="timeline-time">16:00 – 17:30</div>
           <div class="timeline-title">🌺 VanDusen Botanical Garden</div>
           <div class="timeline-desc">20 公頃的亞熱帶植物園，日本庭園、沙漠花園、岩石花園。俯瞰整個溫哥華市景。夏季花卉最盛</div>
           <div class="timeline-cost">🎫 $25 / 成人</div>
         </div>
-        <div class="timeline-item animate-fade-up" data-goto="6" style="animation-delay: 0.7s">
+        <div class="timeline-item animate-fade-up" data-goto="5" style="animation-delay: 0.7s">
           <div class="timeline-dot"></div>
           <div class="timeline-time">17:30 – 19:00</div>
           <div class="timeline-title">🌅 English Bay Beach 日落</div>
@@ -1427,8 +1427,11 @@ document.querySelectorAll('.route-stop').forEach(stop => {
     };
     document.getElementById('map-tooltip').textContent = `📍 ${names[stopNum]}`;
     // 跳到該景點的介紹頁（slide 4）並開啟詳情 modal
+    // ⚠️ route-stop 編號與 attraction 編號在 5/6 相反：
+    //    stop 5 = English Bay = attraction 6；stop 6 = VanDusen = attraction 5
     goToSlide(4);
-    showAttraction(stopNum);
+    const STOP_TO_ATTRACTION = { '1':'1','2':'2','3':'3','4':'4','5':'6','6':'5' };
+    showAttraction(STOP_TO_ATTRACTION[stopNum] || stopNum);
   });
 });
 
@@ -1472,8 +1475,10 @@ document.querySelectorAll('.stop-circle').forEach(stop => {
     };
     document.getElementById('map-tooltip').textContent = `📍 ${names[stopNum]}`;
     // 跳到該景點的介紹頁（slide 4）並開啟詳情 modal（與清單行為一致）
+    // ⚠️ stop 編號與 attraction 編號在 5/6 相反，需轉換
     goToSlide(4);
-    showAttraction(stopNum);
+    const STOP_TO_ATTRACTION = { '1':'1','2':'2','3':'3','4':'4','5':'6','6':'5' };
+    showAttraction(STOP_TO_ATTRACTION[stopNum] || stopNum);
   });
 });
 
