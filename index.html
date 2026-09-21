@@ -544,7 +544,12 @@ html, body {
    手機改用 viewport 原生寬度重排，slide 垂直堆疊、可捲動。
    ============================================================ */
 @media (max-width: 820px) {
-  html, body { overflow-y: auto; overflow-x: hidden; }
+  /* 桌面基底是 height:100%，會把 html 釘在 viewport 高度 → 永遠不能捲。
+     直式模式放開高度，讓內容撐開文件。 */
+  html, body {
+    height: auto; min-height: 100%;
+    overflow-y: auto; overflow-x: hidden;
+  }
 
   /* 關掉全覽縮放 — deck-viewport 恢復原生尺寸 */
   .deck-viewport {
