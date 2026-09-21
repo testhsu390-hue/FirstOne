@@ -1472,6 +1472,9 @@ function fitDeck() {
 }
 window.addEventListener('resize', fitDeck);
 fitDeck();
+// 手機直式重排依賴 slide 顯示/隱藏與可捲動 body；fitDeck 跑完後
+// 再套用一次，確保 inline transform 不殘留（fitDeck 內部會判斷 ≤820px 清空）
+requestAnimationFrame(() => fitDeck());
 
 // Restore saved slide
 const savedSlide = localStorage.getItem('vancouver-slide');
