@@ -547,7 +547,10 @@ html, body {
   html, body { overflow-y: auto; overflow-x: hidden; }
 
   /* 關掉全覽縮放 — deck-viewport 恢復原生尺寸 */
-  .deck-viewport { transform: none !important; will-change: auto; }
+  .deck-viewport {
+    transform: none !important; will-change: auto;
+    overflow: visible; /* 桌面規則是 hidden，直式模式內容比 viewport 高，必須放開 */
+  }
 
   /* deck 變成可捲動的直式文件，不再是固定 1080px */
   .deck {
