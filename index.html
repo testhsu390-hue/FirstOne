@@ -48,7 +48,12 @@ html, body {
   background: linear-gradient(135deg, var(--bg-deep) 0%, #0f2845 50%, #162d52 100%);
   border-radius: 0;
   transform-origin: center center;
+  will-change: transform;
 }
+
+/* JS 會在 onload/resize 時計算 .deck 的 transform: scale(),
+   根據 viewport 大小自動 fit-to-screen。
+   CSS 只提供 fallback(無 JS 時不縮放,但 viewport 1920×1080 時剛好). */
 
 /* Slides */
 .slide {
@@ -513,17 +518,19 @@ html, body {
 }
 
 /* Responsive */
-@media (max-width: 1400px) {
-  .deck { transform: scale(0.75); }
+/* Responsive — fit-to-viewport by JS; media queries are CSS-only fallback
+   for environments without JS (like some preview tools). */
+@media (max-width: 1400px) and (prefers-reduced-motion: no-preference) {
+  .deck:not([data-scaled]) { transform: scale(0.75); }
 }
-@media (max-width: 1200px) {
-  .deck { transform: scale(0.6); }
+@media (max-width: 1200px) and (prefers-reduced-motion: no-preference) {
+  .deck:not([data-scaled]) { transform: scale(0.6); }
 }
-@media (max-width: 900px) {
-  .deck { transform: scale(0.45); }
+@media (max-width: 900px) and (prefers-reduced-motion: no-preference) {
+  .deck:not([data-scaled]) { transform: scale(0.45); }
 }
-@media (max-width: 600px) {
-  .deck { transform: scale(0.3); }
+@media (max-width: 600px) and (prefers-reduced-motion: no-preference) {
+  .deck:not([data-scaled]) { transform: scale(0.3); }
 }
 </style>
 </head>
@@ -1272,6 +1279,26 @@ document.addEventListener('touchend', (e) => {
 });
 
 // === Init ===
+// ── Fit-to-viewport auto-scale (solves "瘦長 / can't click" problem) ──
+// CSS @media uses fixed breakpoints that don't account for viewport HEIGHT,
+// causing the 1920×1080 deck to overflow on shorter screens (e.g. 1366×768).
+// JS computes scale = min(vw/1920, vh/1080) so the deck fits exactly.
+function fitDeck() {
+  const deck = document.getElementById('deck');
+  if (!deck) return;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const DECK_W = 1920, DECK_H = 1080;
+  const scale = Math.min(vw / DECK_W, vh / DECK_H);
+  deck.style.transform = `scale(${scale})`;
+  deck.setAttribute('data-scaled', '1');
+  // Hide scrollbars — deck should fit exactly without scrolling
+  document.body.style.overflow = 'hidden';
+}
+window.addEventListener('resize', fitDeck);
+fitDeck();
+
+// Restore saved slide
 const savedSlide = localStorage.getItem('vancouver-slide');
 if (savedSlide) goToSlide(parseInt(savedSlide));
 updateUI();
